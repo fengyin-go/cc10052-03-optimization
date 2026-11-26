@@ -8,6 +8,18 @@ from typing import Any
 
 from app.seed import SEED_ROWS
 
+# 指标查询服务内部使用的关联表：它们是查询轮次/窗口结果/补算核对的运行态数据，
+# 不是对外的业务模块，不能出现在运营概览的模块清单里。
+INTERNAL_TABLES = {
+    "metric_query_experiment",
+    "metric_query_metric",
+    "metric_window_result",
+    "metric_result_version",
+    "metric_query_round",
+    "metric_recompute_check",
+    "metric_recompute_job",
+}
+
 
 class Store:
     def __init__(self) -> None:
@@ -16,7 +28,7 @@ class Store:
         }
 
     def module_names(self) -> list[str]:
-        return sorted(self._tables)
+        return sorted(name for name in self._tables if name not in INTERNAL_TABLES)
 
     def rows(self, module: str) -> list[dict[str, Any]]:
         return self._tables.setdefault(module, [])

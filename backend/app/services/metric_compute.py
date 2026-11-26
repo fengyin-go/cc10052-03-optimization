@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from app.services.base import BaseModuleService
+from app.services.metric_query import metric_query_service
 from app.store import store
 
 
@@ -158,3 +159,74 @@ class MetricComputeService(BaseModuleService):
             for r in store.rows(self.MODULE)
             if r.get("指标编码") == metric_code and r.get("status") == "已完成"
         ]
+
+    # ---- 业务扩展：为指标查询提供窗口结果的作业轮次与调度窗口身份 ----
+
+    def window_result_identity(
+        self, exp_code: str, metric_code: str, start: str | None = None, end: str | None = None
+    ) -> dict[str, Any]:
+        """按实验+指标读取指标窗口结果，返回作业轮次与调度窗口身份。
+
+        指标查询服务用这份数据展示已确认窗口；缺段窗口则由调度计划补出
+        调度窗口身份（见 window_utils.scheduling_window_identity），二者口径一致。
+        """
+        result = metric_query_service.window_results(exp_code, metric_code, start, end)
+        if not result.get("ok"):
+            return {"ok": False, "message": result.get("message", "窗口结果读取失败")}
+        items = []
+        for row in result["items"]:
+            job_id = row.get("作业id")
+            job = self._find_result_job(row, job_id)
+            items.append({
+                "窗口开始": row.get("窗口开始", ""),
+                "窗口结束": row.get("窗口结束", ""),
+                "窗口": row.get("窗口", ""),
+                "指标值": row.get("指标值"),
+                "结果版本": row.get("结果版本", ""),
+                "作业轮次": row.get("作业轮次", "") or (job.get("作业轮次", "") if job else ""),
+                "调度窗口": row.get("调度窗口", ""),
+                "作业id": job_id,
+                "作业名称": self._job_name(job),
+            })
+        return {
+            "ok": True,
+            "实验编码": exp_code,
+            "指标编码": metric_code,
+            "items": items,
+            "total": len(items),
+        }
+
+    def _find_result_job(self, row: dict[str, Any], job_id: Any) -> dict[str, Any] | None:
+        """定位产生该窗口结果的作业：先找补算作业，再回退到计算作业清单。
+
+        两类作业各自独立编号，必须按同一实验+指标+窗口匹配，不能只按 id 碰撞。
+        """
+        if job_id is not None:
+            recompute = next(
+                (j for j in store.rows("metric_recompute_job")
+                 if int(j.get("id", 0)) == int(job_id)
+                 and str(j.get("实验编码", "")) == str(row.get("实验编码", ""))
+                 and str(j.get("指标编码", "")) == str(row.get("指标编码", ""))
+                 and str(j.get("窗口开始", "")) == str(row.get("窗口开始", ""))),
+                None,
+            )
+            if recompute is not None:
+                return {**recompute, "_来源": "recompute"}
+        start = str(row.get("窗口开始", ""))
+        direct = next(
+            (j for j in store.rows(self.MODULE)
+             if str(j.get("实验编码", "")) == str(row.get("实验编码", ""))
+             and str(j.get("指标编码", "")) == str(row.get("指标编码", ""))
+             and start in str(j.get("计算窗口", ""))),
+            None,
+        )
+        return {**direct, "_来源": "compute"} if direct is not None else None
+
+    @staticmethod
+    def _job_name(job: dict[str, Any] | None) -> str:
+        if job is None:
+            return ""
+        if job.get("_来源") == "recompute":
+            return f"补算 {job.get('补算编码', '')}"
+        return str(job.get("作业名称", ""))
+

@@ -70,3 +70,45 @@ body { margin: 0; background: #f6f8fb; color: #1f2937; }
 .analysis-chart { display: flex; align-items: flex-end; gap: 8px; height: 160px; padding: 12px 0; }
 .analysis-bar { flex: 1; border-radius: 4px 4px 0 0; background: var(--brand); min-width: 24px; position: relative; transition: height 0.4s; }
 .analysis-bar span { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); font-size: 10px; color: var(--muted); white-space: nowrap; }
+/* 指标查询服务：模块分页签 */
+.module-tabs { display: flex; flex-direction: column; }
+.tab-bar { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+.tab { border: none; background: none; padding: 8px 14px; font-size: 13px; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; }
+.tab.active { color: var(--brand); border-bottom-color: var(--brand); font-weight: 600; }
+/* 指标查询服务：查询与窗口结果 */
+.query-form select, .query-form input { border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; font-size: 13px; }
+.query-form input[type="number"] { width: 90px; }
+.round-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; font-size: 13px; }
+.round-counts { display: flex; gap: 6px; margin-left: auto; }
+.tag { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 12px; border: 1px solid transparent; }
+.tag-ok { background: #ecfdf3; color: #067647; border-color: #abefc6; }
+.tag-warn { background: #fffaeb; color: #b54708; border-color: #fedf89; }
+.tag-run { background: #eff8ff; color: #175cd3; border-color: #b2ddff; }
+.mono { font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace; font-size: 12px; }
+.pager { display: flex; align-items: center; gap: 14px; margin: 10px 0; font-size: 13px; color: var(--muted); }
+.pager .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.check-form { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; margin-top: 12px; }
+.check-form h4, .checks-head h4 { margin: 0 0 4px; font-size: 14px; }
+.check-form-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin: 8px 0; }
+.check-form-row input { border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; font-size: 13px; }
+.check-result { font-size: 13px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 6px; padding: 8px 10px; }
+.checks-panel { margin-top: 16px; }
+.checks-panel-inner { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+.checks-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.checks-head select { border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; font-size: 13px; }
+.check-detail { border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; margin-top: 10px; background: #fafbfc; }
+.check-detail-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.check-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px 16px; margin: 10px 0; }
+.check-meta dt { font-size: 12px; color: var(--muted); }
+.check-meta dd { margin: 0; font-size: 13px; }
+.check-block { margin-top: 12px; }
+.check-block h5 { margin: 0 0 6px; font-size: 13px; }
+.mini-table { width: 100%; border-collapse: collapse; background: #fff; }
+.mini-table th, .mini-table td { border: 1px solid var(--border); padding: 5px 8px; font-size: 12px; text-align: left; }
+.mini-table tr[data-adopted="false"] td { background: #fffbf0; }
+.muted { color: var(--muted); }
+.badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 12px; margin-left: 6px; }
+.badge-ok { background: #ecfdf3; color: #067647; }
+.badge-warn { background: #fffaeb; color: #b54708; }
+.section-gap { margin-top: 20px; }
+

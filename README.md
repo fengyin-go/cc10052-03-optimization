@@ -79,5 +79,36 @@ npm run dev
 - 列表接口统一返回 `{ items, total, page, size }`，动作接口统一返回 `{ ok, message }`。
 - 状态流转只允许在 `app/services` 里改，路由层不做业务判断。
 
+## 指标查询服务：窗口查询与补算核对
+
+`metric_api` 与 `metric_compute` 使用专用工作台，围绕"选定实验+指标→检索区间→
+按轮次翻页→从缺段发起补算核对"展开，逻辑集中在
+`backend/app/services/metric_query.py` 与 `backend/app/services/window_utils.py`。
+
+- 一次检索生成一个**查询轮次**，轮次内保存窗口快照；翻页只换页码，不重新取数，
+  后到的确认结果不会改写旧轮次里已经看到的缺段。
+- 区间按**左闭右开**与调度网格求交：窗口锚定在调度网格（小时窗锚在整点），首尾窗口
+  可被查询区间裁短，但都带真实**调度窗口**标识，缺段据此定位可补算的窗口。
+- 窗口只取**同一实验、同一指标**的实际结果，状态区分**已确认 / 缺段 / 未算完**；
+  执行中的补算只标"未算完"，不冒充已完成数据。
+- 补算核对在**领取时**才真正领用当前确认结果：与登记基线版本不一致的窗口登记为
+  **版本冲突**，执行中的补算登记为未完成；核对载明每个窗口"是否实际采用"。
+- 补算完成会推出新的确认版本，**新的查询**能看到结果；旧轮次仍按快照复查原缺段。
+
+主要接口（均在 `/api` 下）：
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| GET | `/metric-query/catalog` | 可选实验与该实验下指标 |
+| POST | `/metric-query/rounds` | 按实验+指标+区间生成查询轮次（返回第一页快照） |
+| GET | `/metric-query/rounds/{id}?page=&size=` | 同一轮指定页（翻页） |
+| POST | `/metric-query/rounds/{id}/checks` | 从选定区间登记补算核对 |
+| GET/POST | `/metric-query/checks`、`/checks/{id}`、`/checks/{id}/claim` | 列出/查看/领取办理核对 |
+| GET/POST | `/metric-query/jobs`、`/jobs/{id}/complete` | 补算作业与完成（推出新版本） |
+| GET | `/metric_compute/window-identity` | 指标窗口结果对应的作业轮次与调度窗口身份 |
+
+前端对应 `MetricApiView`（窗口查询 + 补算核对）与 `MetricComputeView`
+（窗口结果身份 + 继续办理核对）。
+
 领域：数据工程
 子方向：数据分析与数据应用
